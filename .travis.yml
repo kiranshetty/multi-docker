@@ -1,0 +1,23 @@
+sudo: required
+services: 
+    - docker
+
+before _install:
+    - docker build -t kiranshetty/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run kiranshetty/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t kiranshetty/multi-client ./client
+    - docker build -t kiranshetty/multi-nginx ./nginx
+    - docker build -t kiranshetty/multi-server ./server
+    - docker build -t kiranshetty/multi-worker ./worker
+
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+    - docker push kiranshetty/multi-client
+    - docker push kiranshetty/multi-nginx
+    - docker push kiranshetty/multi-server
+    - docker push kiranshetty/multi-worker
+    
